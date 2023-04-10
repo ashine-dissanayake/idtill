@@ -18,24 +18,32 @@ from PyQt5.QtGui import QMovie, QPixmap
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 import time
+from lib.state.state import *
 
 # Constants
 PATH_DIR = os.getcwd(); 
 
 class ThesisGUI(QtWidgets.QMainWindow):
-    def __init__(self, queue): 
+    def __init__(self, from_database_queue, to_database_queue): 
         super(ThesisGUI, self).__init__()
         uic.loadUi(f'{os.getcwd()}/lib/ui/thesis.ui', self)
         self.show()
 
-        # Create a thread to read from queue. 
-        self.queue = queue
+        # Create a thread to read from from_database_queue.
+        self.to_database_queue = to_database_queue
+  
+        self.from_database_queue = from_database_queue        
         threading.Thread(target=self.read_queue, daemon = True).start()
+        
+        self.state = State.LEARN
+        self.test_set = None
+        self.counter = 0
 
         self.init_home_gui()
         self.init_video_player()
         self.init_image_ui()
         self.init_card_ui()
+        self.init_quiz_ui()
 
 
     def init_home_gui(self): 
@@ -77,13 +85,36 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.image.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
 
 
-    def onChange(self, tabIndex):   
+    def init_card_ui(self):
+        self.card.setStyleSheet("background-color: #FFFDF0;") # "background-image: url(media/confetti.png);")
+        self.infoList.setStyleSheet("background-color: white;")
+
+
+    def init_quiz_ui(self): 
+        self.quiz.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
+        self.next_button.setStyleSheet("background-color: #F5F5F5;")
+        self.set_default_colour()
+        self.question_label.setStyleSheet("background-color: #FFFFFF;")
+
+        self.next_button.clicked.connect(self.next_question)
+        self.option_1.clicked.connect(self.option_selected)
+        self.option_2.clicked.connect(self.option_selected)
+        self.option_3.clicked.connect(self.option_selected)
+
+
+    def onChange(self, tabIndex):  
+        if tabIndex == 4 and self.state != State.TEST: # if the state changed to TEST
+            self.state = State.TEST
+            self.to_database_queue.put(State.TEST)
+        elif self.state != State.LEARN: # if the state changed to LEARN
+            self.state = State.LEARN 
+            self.to_database_queue.put(State.LEARN)
+
+        # if user clicks video widget, play video automatically, otherwise stop. 
         if tabIndex == 1: 
             self.mediaPlayer.play()
         else: 
             self.mediaPlayer.stop()
-
-        print(tabIndex)
 
 
     def mediaStateChanged(self, state):
@@ -91,31 +122,78 @@ class ThesisGUI(QtWidgets.QMainWindow):
             self.tabWidget.setCurrentIndex(2)
 
 
-    def init_card_ui(self):
-        self.card.setStyleSheet("background-color: #FFFDF0;") # "background-image: url(media/confetti.png);")
-        self.infoList.setStyleSheet("background-color: white;")
+    def next_question(self): 
+        self.counter += 1
+        self.question_label.setText(self.test_set[self.counter][0])
+        self.option_1.setText(self.test_set[self.counter][1])
+        self.option_2.setText(self.test_set[self.counter][2])
+        self.option_3.setText(self.test_set[self.counter][3])
+        self.set_default_colour()
+
+
+    def option_selected(self): 
+        name = self.sender().objectName()
+        ind = int(name.split("_")[-1])
+        print(ind == self.test_set[self.counter][4])
+
+        if ind == self.test_set[self.counter][4]: 
+            self.set_button_green(ind)
+        else: 
+            self.set_button_red(ind)
+
+
+    def set_default_colour(self): 
+        self.option_1.setStyleSheet("background-color: #F5F5F5;")
+        self.option_2.setStyleSheet("background-color: #F5F5F5;")
+        self.option_3.setStyleSheet("background-color: #F5F5F5;")        
+
+
+    def set_button_green(self, ind): 
+        if ind == 1: 
+            self.option_1.setStyleSheet("background-color: #90EE90;")
+        elif ind == 2: 
+            self.option_2.setStyleSheet("background-color: #90EE90;")
+        elif ind == 3:
+            self.option_3.setStyleSheet("background-color: #90EE90;")
+
+
+    def set_button_red(self, ind): 
+        if ind == 1: 
+            self.option_1.setStyleSheet("background-color: #FF3333;")
+        elif ind == 2: 
+            self.option_2.setStyleSheet("background-color: #FF3333;")
+        elif ind == 3:
+            self.option_3.setStyleSheet("background-color: #FF3333;")
 
 
     def read_queue(self): 
         while True: 
             
-            card_info = self.queue.get()
-            
-            file_structure_v = "/database/videos/" if card_info[0] != -1 else "/database/error_videos/"
-            file_structure_i = "/database/images/" if card_info[0] != -1 else "/database/error_images/"
-            
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
-                PATH_DIR + file_structure_v + card_info[3])))
-            
-            # Set video
-            pixmap = QPixmap(PATH_DIR + file_structure_i + card_info[4])
-            smaller_pixmap = pixmap.scaled(850, 850, Qt.KeepAspectRatio, 
-                                        Qt.FastTransformation)
-            # Set image
-            self.imageWidget.setPixmap(smaller_pixmap)    
+            packet = self.from_database_queue.get()
+            print(packet)
+            if self.state == State.LEARN:
+                file_structure_v = "/database/videos/" if packet[0] != -1 else "/database/error_videos/"
+                file_structure_i = "/database/images/" if packet[0] != -1 else "/database/error_images/"
+                
+                self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
+                    PATH_DIR + file_structure_v + packet[3])))
+                
+                # Set video
+                pixmap = QPixmap(PATH_DIR + file_structure_i + packet[4])
+                smaller_pixmap = pixmap.scaled(850, 850, Qt.KeepAspectRatio, 
+                                            Qt.FastTransformation)
+                # Set image
+                self.imageWidget.setPixmap(smaller_pixmap)    
 
-            # Log tag                                         
-            listWidgetItem = QListWidgetItem(f"{time.asctime()}, COLUMN:{card_info[0]}, UID:{card_info[1]}, CARD:{card_info[2]}, VIDEO:{card_info[3]}, IMAGE:{card_info[4]}")
-            self.infoList.addItem(listWidgetItem)   
+                # Log tag                                         
+                listWidgetItem = QListWidgetItem(f"{time.asctime()}, COLUMN:{packet[0]}, UID:{packet[1]}, CARD:{packet[2]}, VIDEO:{packet[3]}, IMAGE:{packet[4]}")
+                self.infoList.addItem(listWidgetItem)   
 
-            self.tabWidget.setCurrentIndex(1)
+                self.tabWidget.setCurrentIndex(1)
+            elif self.state == State.TEST:  
+                self.test_set = packet
+                self.question_label.setText(packet[self.counter][0])
+                self.option_1.setText(packet[self.counter][1])
+                self.option_2.setText(packet[self.counter][2])
+                self.option_3.setText(packet[self.counter][3])
+                
