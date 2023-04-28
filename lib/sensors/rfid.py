@@ -10,7 +10,7 @@ from mfrc522_i2c import MFRC522
 # https://github.com/cpranzl/mfrc522_i2c
 
 # MFRC522 Configuration
-MFRC522_I2C_BUS = 0x1
+MFRC522_I2C_BUS = 0x00
 MFRC522_SLAVE_ADDR = 0x28
 
 def rfid_thread(queue):
@@ -22,8 +22,10 @@ def rfid_thread(queue):
     logging.debug(f'MFRC522 Software Version: {version}')
 
     while True:
-        # Scan for cards
+        time.sleep(0.25)
+        
         try:
+            # Scan for cards
             (status, backData, tagType) = MFRC522Reader.scan()
 
             if status == MFRC522Reader.MIFARE_OK:
@@ -33,9 +35,8 @@ def rfid_thread(queue):
                 (status, uid, backBits) = MFRC522Reader.identify()
                 if status == MFRC522Reader.MIFARE_OK:
                     queue.put(uid)
-                    logging.info(f'Card identified, '
-                        f'UID: {uid[0]:02x}:{uid[1]:02x}:{uid[2]:02x}:{uid[3]:02x}')
+                    # print(f'Card identified, '
+                    #     f'UID: {uid[0]:02x}:{uid[1]:02x}:{uid[2]:02x}:{uid[3]:02x}')
         except: 
             continue                    
-        """ Adjust this delay to fine tune scans """
-        time.sleep(1)
+  

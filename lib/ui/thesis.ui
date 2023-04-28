@@ -410,6 +410,89 @@
       </property>
      </widget>
     </widget>
+    <widget class="QWidget" name="words">
+     <attribute name="title">
+      <string>Word Wizard</string>
+     </attribute>
+     <widget class="QLabel" name="word_title">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1280</width>
+        <height>101</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Cooper Black</family>
+        <pointsize>30</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+        <underline>false</underline>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::RightToLeft</enum>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>Word Wizard!</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="word_input">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>140</y>
+        <width>971</width>
+        <height>191</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>80</pointsize>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="clear_button">
+      <property name="geometry">
+       <rect>
+        <x>980</x>
+        <y>460</y>
+        <width>141</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="text">
+       <string>CLEAR</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

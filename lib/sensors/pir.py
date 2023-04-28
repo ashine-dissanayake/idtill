@@ -9,7 +9,7 @@ from rpi_backlight import Backlight, BoardType
 # See https://pypi.org/project/seeed-python-reterminal/ on how to use onboard devices
 
 # PIR CONFIGURATION
-PIR_GPIO_PIN = 17
+PIR_GPIO_PIN = 16
 
 def pir_thread():
     print("Running PIR Thread")
@@ -32,12 +32,10 @@ def pir_thread():
             if backlight.power == False: 
                 backlight.power = True
 
-            print("PIR: Motion detected " + str(motion_cnt))
-
             while True:
                 if GPIO.input(PIR_GPIO_PIN) == 0:
-                    print("PIR: Ready")
                     break
+
             last_sense_time = round(time.time() * 1000)
 
         curr_sense_time = round(time.time() * 1000)

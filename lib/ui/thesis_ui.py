@@ -44,6 +44,7 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.init_image_ui()
         self.init_card_ui()
         self.init_quiz_ui()
+        self.init_word_ui()
 
 
     def init_home_gui(self): 
@@ -77,9 +78,7 @@ class ThesisGUI(QtWidgets.QMainWindow):
   
         self.mediaPlayer.setVideoOutput(videoWidget)
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
-        # self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
-        #     PATH_DIR + "/media/demo.mp4")))
-
+        
 
     def init_image_ui(self): 
         self.image.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
@@ -102,13 +101,25 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.option_3.clicked.connect(self.option_selected)
 
 
+    def init_word_ui(self): 
+        self.words.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
+        self.word_input.setStyleSheet("background-color: #FFFFFF;")
+        self.clear_button.setStyleSheet("background-color: #F5F5F5;")
+
+        self.clear_button.clicked.connect(self.clear_question)
+        
+
     def onChange(self, tabIndex):  
         if tabIndex == 4 and self.state != State.TEST: # if the state changed to TEST
             self.state = State.TEST
             self.to_database_queue.put(State.TEST)
+        elif tabIndex == 5 and self.state != State.WORD_WIZARD: # if the state changed to TEST
+            self.state = State.WORD_WIZARD
+            self.to_database_queue.put(State.WORD_WIZARD)
         elif self.state != State.LEARN: # if the state changed to LEARN
             self.state = State.LEARN 
             self.to_database_queue.put(State.LEARN)
+
 
         # if user clicks video widget, play video automatically, otherwise stop. 
         if tabIndex == 1: 
@@ -118,12 +129,15 @@ class ThesisGUI(QtWidgets.QMainWindow):
 
 
     def mediaStateChanged(self, state):
-        if self.mediaPlayer.state() == QMediaPlayer.StoppedState: 
+        if self.mediaPlayer.state() == QMediaPlayer.StoppedState and \
+            self.tabWidget.currentIndex() == 1:
+
             self.tabWidget.setCurrentIndex(2)
 
 
     def next_question(self): 
-        self.counter += 1
+        self.counter = (self.counter + 1) % len(self.test_set)
+        print(self.counter, len(self.test_set))
         self.question_label.setText(self.test_set[self.counter][0])
         self.option_1.setText(self.test_set[self.counter][1])
         self.option_2.setText(self.test_set[self.counter][2])
@@ -131,10 +145,13 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.set_default_colour()
 
 
+    def clear_question(self): 
+        self.word_input.setText("")
+
+
     def option_selected(self): 
         name = self.sender().objectName()
         ind = int(name.split("_")[-1])
-        print(ind == self.test_set[self.counter][4])
 
         if ind == self.test_set[self.counter][4]: 
             self.set_button_green(ind)
@@ -169,24 +186,22 @@ class ThesisGUI(QtWidgets.QMainWindow):
     def read_queue(self): 
         while True: 
             
-            packet = self.from_database_queue.get()
-            print(packet)
+            packet = self.from_database_queue.get() # [column, uid, char, english, folder, video, image]
             if self.state == State.LEARN:
-                file_structure_v = "/database/videos/" if packet[0] != -1 else "/database/error_videos/"
-                file_structure_i = "/database/images/" if packet[0] != -1 else "/database/error_images/"
+                file_structure = "/database/" + packet[4] + "/" if packet[0] != -1 else "/database/_error/" + packet[4] + "/"
                 
                 self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
-                    PATH_DIR + file_structure_v + packet[3])))
+                    PATH_DIR + file_structure + packet[5])))
                 
                 # Set video
-                pixmap = QPixmap(PATH_DIR + file_structure_i + packet[4])
+                pixmap = QPixmap(PATH_DIR + file_structure + packet[6])
                 smaller_pixmap = pixmap.scaled(850, 850, Qt.KeepAspectRatio, 
                                             Qt.FastTransformation)
                 # Set image
                 self.imageWidget.setPixmap(smaller_pixmap)    
 
                 # Log tag                                         
-                listWidgetItem = QListWidgetItem(f"{time.asctime()}, COLUMN:{packet[0]}, UID:{packet[1]}, CARD:{packet[2]}, VIDEO:{packet[3]}, IMAGE:{packet[4]}")
+                listWidgetItem = QListWidgetItem(f"{time.asctime()}, COLUMN:{packet[0]}, UID:{packet[1]}, CARD:{packet[2]}, ENGLISH:{packet[3]}, FOLDER NAME:{packet[4]}, VIDEO:{packet[5]}, IMAGE:{packet[6]}")
                 self.infoList.addItem(listWidgetItem)   
 
                 self.tabWidget.setCurrentIndex(1)
@@ -196,4 +211,7 @@ class ThesisGUI(QtWidgets.QMainWindow):
                 self.option_1.setText(packet[self.counter][1])
                 self.option_2.setText(packet[self.counter][2])
                 self.option_3.setText(packet[self.counter][3])
+            elif self.state == State.WORD_WIZARD: 
+                curr_text = self.word_input.text()
+                self.word_input.setText(curr_text + packet[2])
                 
