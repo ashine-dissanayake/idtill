@@ -6,23 +6,7 @@ import time
 import numpy as np
 
 MAX_TEST_QUESTIONS = 15
-OPTIONS_PER_QUESTIONS = 3
-
-def uid_hex_format(uid : list): 
-    """
-    Returns hex forat of uid. 
-
-    param: 
-        uid (list) list format of uid
-
-    return: 
-        hex format of uid
-    """
-    uid_str = ""
-    for byte in uid: 
-        uid_str += hex(byte).split('x')[-1].zfill(2) + ":"
-
-    return uid_str[:-1]    
+OPTIONS_PER_QUESTIONS = 3 
 
 
 def create_test_set(db): 
@@ -31,7 +15,7 @@ def create_test_set(db):
 
     if len(db) < MAX_TEST_QUESTIONS: 
         total_questions = len(db)
-    print(total_questions)
+
     for i in range(total_questions):
         ind = random.randint(0, len(db) - 1) # Exclude end point
 
@@ -99,16 +83,15 @@ def database_thread(from_rfid_queue, to_gui_queue, from_gui_queue):
                 from_rfid_queue.clear()
             else: 
                 uid = from_rfid_queue.get() # list format
-                uid_str = uid_hex_format(uid)
-                ind = list(df['uid'][df['uid'] == uid_str].index)
+                ind = list(df['uid'][df['uid'] == uid].index)
                 uid_info = df.iloc[ind].values.flatten().tolist() # [column, uid, char, english, folder, video, image]
 
                 print(uid_info)
                 if len(ind) == 1:
                     packet = media_exist(uid_info, ind)
                 elif len(ind) < 1: 
-                    packet = [-1, uid_str, "UNKNOWN", "UNKNOWN", "unknown", "unknown.mp4", "unknown.png"]
+                    packet = [-1, uid, "UNKNOWN", "UNKNOWN", "unknown", "unknown.mp4", "unknown.png"]
                 elif len(ind) > 1:
-                    packet = [-1, uid_str, "DUPLICATE", "DUPLICATE", "duplicate", "duplicate.mp4", "duplicate.png"]
+                    packet = [-1, uid, "DUPLICATE", "DUPLICATE", "duplicate", "duplicate.mp4", "duplicate.png"]
 
                 to_gui_queue.put(packet)

@@ -13,6 +13,24 @@ from mfrc522_i2c import MFRC522
 MFRC522_I2C_BUS = 0x00
 MFRC522_SLAVE_ADDR = 0x28
 
+
+def uid_hex_format(uid : list): 
+    """
+    Returns hex forat of uid. 
+
+    param: 
+        uid (list) list format of uid
+
+    return: 
+        hex format of uid
+    """
+    uid_str = ""
+    for byte in uid: 
+        uid_str += hex(byte).split('x')[-1].zfill(2) + ":"
+
+    return uid_str[:-1] 
+
+
 def rfid_thread(queue):
     logging.info("Running RFID Thread")
     
@@ -22,10 +40,10 @@ def rfid_thread(queue):
     logging.debug(f'MFRC522 Software Version: {version}')
 
     while True:
+        # Scan for cards
         time.sleep(0.25)
         
         try:
-            # Scan for cards
             (status, backData, tagType) = MFRC522Reader.scan()
 
             if status == MFRC522Reader.MIFARE_OK:
@@ -34,9 +52,8 @@ def rfid_thread(queue):
                 # Get UID of the card
                 (status, uid, backBits) = MFRC522Reader.identify()
                 if status == MFRC522Reader.MIFARE_OK:
-                    queue.put(uid)
-                    # print(f'Card identified, '
-                    #     f'UID: {uid[0]:02x}:{uid[1]:02x}:{uid[2]:02x}:{uid[3]:02x}')
+                    queue.put(uid_hex_format(uid))
+
         except: 
             continue                    
   

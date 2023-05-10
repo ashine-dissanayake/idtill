@@ -45,8 +45,8 @@
       <property name="font">
        <font>
         <family>Cooper Black</family>
-        <pointsize>50</pointsize>
-        <weight>50</weight>
+        <pointsize>80</pointsize>
+        <weight>80</weight>
         <bold>false</bold>
         <underline>false</underline>
        </font>
@@ -76,7 +76,7 @@
       <property name="font">
        <font>
         <family>Cooper Black</family>
-        <pointsize>20</pointsize>
+        <pointsize>40</pointsize>
         <weight>50</weight>
         <bold>false</bold>
         <underline>false</underline>
@@ -158,7 +158,7 @@
       <property name="font">
        <font>
         <family>Cooper Black</family>
-        <pointsize>30</pointsize>
+        <pointsize>70</pointsize>
         <weight>50</weight>
         <bold>false</bold>
         <underline>false</underline>
@@ -204,7 +204,7 @@
       <property name="font">
        <font>
         <family>Cooper Black</family>
-        <pointsize>30</pointsize>
+        <pointsize>70</pointsize>
         <weight>50</weight>
         <bold>false</bold>
         <underline>false</underline>
@@ -250,7 +250,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>20</pointsize>
+        <pointsize>40</pointsize>
        </font>
       </property>
       <property name="text">
@@ -274,7 +274,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>20</pointsize>
+        <pointsize>40</pointsize>
        </font>
       </property>
       <property name="text">
@@ -292,7 +292,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>20</pointsize>
+        <pointsize>40</pointsize>
        </font>
       </property>
       <property name="text">
@@ -302,15 +302,15 @@
      <widget class="QPushButton" name="next_button">
       <property name="geometry">
        <rect>
-        <x>1080</x>
+        <x>1060</x>
         <y>20</y>
-        <width>141</width>
-        <height>61</height>
+        <width>200</width>
+        <height>100</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <pointsize>10</pointsize>
+        <pointsize>20</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -319,7 +319,7 @@
        <enum>Qt::LeftToRight</enum>
       </property>
       <property name="text">
-       <string>NEXT QUESTION</string>
+       <string>NEXT</string>
       </property>
      </widget>
      <widget class="QLabel" name="perm_label">
@@ -396,7 +396,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>40</pointsize>
+        <pointsize>70</pointsize>
        </font>
       </property>
       <property name="frameShape">
@@ -426,7 +426,7 @@
       <property name="font">
        <font>
         <family>Cooper Black</family>
-        <pointsize>30</pointsize>
+        <pointsize>70</pointsize>
         <weight>50</weight>
         <bold>false</bold>
         <underline>false</underline>
@@ -472,15 +472,15 @@
      <widget class="QPushButton" name="clear_button">
       <property name="geometry">
        <rect>
-        <x>980</x>
+        <x>880</x>
         <y>460</y>
-        <width>141</width>
-        <height>61</height>
+        <width>241</width>
+        <height>101</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <pointsize>10</pointsize>
+        <pointsize>20</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>

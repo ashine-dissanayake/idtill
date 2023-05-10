@@ -19,6 +19,7 @@ from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 import time
 from lib.state.state import *
+from rpi_backlight import Backlight, BoardType
 
 # Constants
 PATH_DIR = os.getcwd(); 
@@ -50,7 +51,7 @@ class ThesisGUI(QtWidgets.QMainWindow):
     def init_home_gui(self): 
         self.tabWidget.currentChanged.connect(self.onChange)
 
-        self.home.setStyleSheet("background-image: url(lib/ui/confetti.png);")
+        self.home.setStyleSheet("background-image: url(lib/ui/external_media/background.png);")
         self.tabWidget.setStyleSheet('QTabBar { font-size: 20pt;}')
         self.title_label.setStyleSheet("color: #371D10;")
         self.title_label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
@@ -58,8 +59,9 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.title_label_2.setStyleSheet("color: #371D10;")
         self.title_label_2.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
-        self.loading_label.setHidden(False)
-        self.gif_loading = QMovie('lib/ui/magnify.gif')
+        self.loading_label.setHidden(False)        
+        self.loading_label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.gif_loading = QMovie('lib/ui/external_media/magnify.gif')
         self.loading_label.setMovie(self.gif_loading)
         self.gif_loading.start()
 
@@ -78,7 +80,9 @@ class ThesisGUI(QtWidgets.QMainWindow):
   
         self.mediaPlayer.setVideoOutput(videoWidget)
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
-        
+        # self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
+        #     PATH_DIR + "/media/demo.mp4")))
+
 
     def init_image_ui(self): 
         self.image.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
@@ -100,6 +104,12 @@ class ThesisGUI(QtWidgets.QMainWindow):
         self.option_2.clicked.connect(self.option_selected)
         self.option_3.clicked.connect(self.option_selected)
 
+        self.correct = QMediaPlayer()
+        self.correct.setMedia(QMediaContent(QUrl.fromLocalFile(PATH_DIR + "/lib/ui/external_media/correct.mp3")))
+
+        self.incorrect = QMediaPlayer()
+        self.incorrect.setMedia(QMediaContent(QUrl.fromLocalFile(PATH_DIR + "/lib/ui/external_media/incorrect.mp3")))
+
 
     def init_word_ui(self): 
         self.words.setStyleSheet("background-color: #FFFDF0;") #cbbeb5
@@ -112,6 +122,7 @@ class ThesisGUI(QtWidgets.QMainWindow):
     def onChange(self, tabIndex):  
         if tabIndex == 4 and self.state != State.TEST: # if the state changed to TEST
             self.state = State.TEST
+            self.set_default_colour()
             self.to_database_queue.put(State.TEST)
         elif tabIndex == 5 and self.state != State.WORD_WIZARD: # if the state changed to TEST
             self.state = State.WORD_WIZARD
@@ -137,7 +148,6 @@ class ThesisGUI(QtWidgets.QMainWindow):
 
     def next_question(self): 
         self.counter = (self.counter + 1) % len(self.test_set)
-        print(self.counter, len(self.test_set))
         self.question_label.setText(self.test_set[self.counter][0])
         self.option_1.setText(self.test_set[self.counter][1])
         self.option_2.setText(self.test_set[self.counter][2])
@@ -154,8 +164,10 @@ class ThesisGUI(QtWidgets.QMainWindow):
         ind = int(name.split("_")[-1])
 
         if ind == self.test_set[self.counter][4]: 
+            self.correct.play()
             self.set_button_green(ind)
         else: 
+            self.incorrect.play()
             self.set_button_red(ind)
 
 
@@ -184,11 +196,13 @@ class ThesisGUI(QtWidgets.QMainWindow):
 
 
     def read_queue(self): 
+        backlight = Backlight("/sys/class/backlight/1-0045/", BoardType.RASPBERRY_PI)
+
         while True: 
-            
+
             packet = self.from_database_queue.get() # [column, uid, char, english, folder, video, image]
             if self.state == State.LEARN:
-                file_structure = "/database/" + packet[4] + "/" if packet[0] != -1 else "/database/_error/" + packet[4] + "/"
+                file_structure = "/database/" + packet[4] + "/" if packet[0] != -1 else "/lib/ui/_error/" + packet[4] + "/"
                 
                 self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(
                     PATH_DIR + file_structure + packet[5])))
